@@ -70,7 +70,15 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		_, _ = fmt.Fprint(w, `{"status":"healthy"}`)
 	})
-	mux.Handle("/mcp", httpServer)
+
+	// Apply auth middleware to MCP endpoint
+	mcpHandler := mcpserver.AuthMiddleware(cfg.Auth.Token)(httpServer)
+	if cfg.Auth.Enabled {
+		log.Println("MCP authentication enabled")
+	} else {
+		log.Println("MCP authentication disabled (no MCP_AUTH_TOKEN configured)")
+	}
+	mux.Handle("/mcp", mcpHandler)
 
 	addr := fmt.Sprintf(":%d", cfg.Server.MCPPort)
 

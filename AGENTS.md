@@ -135,6 +135,23 @@ Returns the supported channels, their parameter schema, and configuration. Use t
 | `AUTH_ERROR` | Authentication failed |
 | `RATE_LIMIT` | Rate limit exceeded |
 
+## Development Workflow
+
+After making any code changes, you **must** run the following checks before considering the task complete:
+
+```bash
+# Run linter (must pass with 0 issues)
+make lint
+
+# Run tests
+make test
+
+# Or run both at once
+make check
+```
+
+All code must pass `golangci-lint` with the project's `.golangci.yml` configuration. Fix any lint errors before committing.
+
 ## Authentication
 
 If `MCP_AUTH_TOKEN` is set, clients must provide the token for authentication. When not set, authentication is disabled.
