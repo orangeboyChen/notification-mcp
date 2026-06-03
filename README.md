@@ -159,6 +159,7 @@ notification-mcp/
 | `EMAIL_SMTP_USERNAME` | - | SMTP authentication username |
 | `EMAIL_SMTP_PASSWORD` | - | SMTP authentication password |
 | `EMAIL_FROM` | - | Sender email address |
+| `EMAIL_FROM_NAME` | - | Sender display name (e.g., "My Service") |
 | `EMAIL_TO` | - | Recipient email address (defaults to EMAIL_FROM if not set) |
 | `EMAIL_USE_TLS` | `true` | Use TLS for SMTP |
 | `MCP_AUTH_TOKEN` | - | Optional MCP authentication token |

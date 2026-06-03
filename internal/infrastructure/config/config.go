@@ -30,6 +30,7 @@ type EmailConfig struct {
 	Username string
 	Password string
 	From     string
+	FromName string
 	To       string
 	UseTLS   bool
 }
@@ -60,6 +61,7 @@ func Load() (*Config, error) {
 			Username: os.Getenv("EMAIL_SMTP_USERNAME"),
 			Password: os.Getenv("EMAIL_SMTP_PASSWORD"),
 			From:     os.Getenv("EMAIL_FROM"),
+			FromName: os.Getenv("EMAIL_FROM_NAME"),
 			To:       os.Getenv("EMAIL_TO"),
 			UseTLS:   getEnvBool("EMAIL_USE_TLS", true),
 		},

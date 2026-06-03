@@ -72,7 +72,11 @@ func (e *EmailSender) Send(_ context.Context, notification *domain.Notification)
 
 	// Build the email message
 	m := gomail.NewMessage()
-	m.SetHeader("From", e.config.From)
+	if e.config.FromName != "" {
+		m.SetAddressHeader("From", e.config.From, e.config.FromName)
+	} else {
+		m.SetHeader("From", e.config.From)
+	}
 	m.SetHeader("To", notification.Recipient)
 
 	// Set subject (use title if available, otherwise use a default)
