@@ -54,7 +54,7 @@ func (s *Server) registerTools() {
 		mcp.WithDescription("Send a notification through a specified channel. Recipients are configured server-side to prevent abuse."),
 		mcp.WithString("channel",
 			mcp.Required(),
-			mcp.Description("The notification channel to use (telegram, email)"),
+			mcp.Description("The notification channel to use (telegram, email, bark)"),
 		),
 		mcp.WithString("body",
 			mcp.Required(),
@@ -90,14 +90,14 @@ func (s *Server) handleSendNotification(ctx context.Context, request mcp.CallToo
 	body := request.GetString("body", "")
 
 	// Extract metadata from arguments map
-	var metadata map[string]string
+	var metadata map[string]interface{}
 	args := request.GetArguments()
 	if args != nil {
 		if metaRaw, ok := args["metadata"]; ok && metaRaw != nil {
 			if metaMap, ok := metaRaw.(map[string]interface{}); ok {
-				metadata = make(map[string]string)
+				metadata = make(map[string]interface{})
 				for k, v := range metaMap {
-					metadata[k] = fmt.Sprintf("%v", v)
+					metadata[k] = v
 				}
 			}
 		}

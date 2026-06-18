@@ -14,11 +14,12 @@ type Channel string
 const (
 	ChannelTelegram Channel = "telegram"
 	ChannelEmail    Channel = "email"
+	ChannelBark     Channel = "bark"
 )
 
 // ValidChannels returns all supported channels.
 func ValidChannels() []Channel {
-	return []Channel{ChannelTelegram, ChannelEmail}
+	return []Channel{ChannelTelegram, ChannelEmail, ChannelBark}
 }
 
 // IsValid checks if the channel is a supported channel.
@@ -38,12 +39,12 @@ type Notification struct {
 	Recipient string
 	Title     string
 	Body      string
-	Metadata  map[string]string
+	Metadata  map[string]interface{}
 	CreatedAt time.Time
 }
 
 // NewNotification creates a new Notification with validation.
-func NewNotification(channel Channel, recipient, title, body string, metadata map[string]string) (*Notification, error) {
+func NewNotification(channel Channel, recipient, title, body string, metadata map[string]interface{}) (*Notification, error) {
 	if !channel.IsValid() {
 		return nil, NewDomainError(ErrCodeInvalidChannel, "unsupported channel: "+string(channel))
 	}
@@ -69,6 +70,8 @@ func (n *Notification) SupportsTitle() bool {
 		return true
 	case ChannelTelegram:
 		return true
+	case ChannelBark:
+		return true
 	default:
 		return false
 	}
@@ -83,6 +86,8 @@ func (n *Notification) FormattedContent() string {
 		}
 		return n.Body
 	case ChannelEmail:
+		return n.Body
+	case ChannelBark:
 		return n.Body
 	default:
 		return n.Body

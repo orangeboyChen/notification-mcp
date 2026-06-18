@@ -9,6 +9,7 @@ func TestChannel_IsValid(t *testing.T) {
 	}{
 		{ChannelTelegram, true},
 		{ChannelEmail, true},
+		{ChannelBark, true},
 		{Channel("sms"), false},
 		{Channel(""), false},
 	}

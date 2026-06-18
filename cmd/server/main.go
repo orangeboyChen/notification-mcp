@@ -54,6 +54,12 @@ func main() {
 		log.Println("Email sender initialized")
 	}
 
+	if cfg.Bark.Enabled {
+		barkSender := sender.NewBarkSender(cfg.Bark)
+		senders = append(senders, barkSender)
+		log.Println("Bark sender initialized")
+	}
+
 	// Create application service
 	notifySvc := application.NewNotificationService(senders)
 

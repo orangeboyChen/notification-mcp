@@ -1,174 +1,167 @@
 # Notification MCP
 
-A multi-channel notification service built with the Model Context Protocol (MCP), following Domain-Driven Design (DDD) architecture principles.
-
-## Features
-
-- 🔔 **Multi-channel notifications** - Send messages via Telegram and Email
-- 🏗️ **DDD Architecture** - Clean separation of concerns with domain, application, infrastructure, and interface layers
-- 🔌 **MCP Protocol** - Standard Model Context Protocol interface for AI assistant integration
-- 🐳 **Docker Ready** - Multi-stage build with health checks
-- 🔒 **Optional Authentication** - Token-based MCP authentication
-- ✅ **Configuration Validation** - Startup checks for required settings
+Notification MCP exposes Telegram, Email, and Bark notifications as MCP tools.
+Recipients are configured on the server to prevent clients from sending to arbitrary destinations.
 
 ## Quick Start
 
-### Prerequisites
-
-- Go 1.21+
-- A Telegram Bot Token (from [@BotFather](https://t.me/BotFather)) and/or SMTP credentials
-
-### Installation
-
 ```bash
-git clone https://github.com/orangeboy/notification-mcp.git
-cd notification-mcp
-go mod tidy
+docker pull ghcr.io/orangeboychen/notification-mcp:{版本号}
+docker run -d --env-file .env -p 3000:3000 ghcr.io/orangeboychen/notification-mcp:{版本号}
 ```
 
-### Configuration
+MCP endpoint:
 
-Copy the example environment file and configure your channels:
-
-```bash
-cp .env.example .env
-# Edit .env with your credentials
+```text
+http://localhost:3000/mcp
 ```
 
-### Running
+Health check:
 
 ```bash
-# Build and run
-go build -o notification-mcp ./cmd/server
-./notification-mcp
-
-# Or run directly
-go run ./cmd/server
+curl http://localhost:3000/health
 ```
 
-### Docker
+## MCP Client Configuration
 
-```bash
-# Build
-docker build -t notification-mcp .
-
-# Run
-docker run -d --env-file .env -p 3000:3000 notification-mcp
-```
-
-The MCP server will be available at `http://localhost:3000/mcp`.
-
-## MCP Tools
-
-### `send-notification`
-
-Send a notification through a specified channel. Recipients are configured server-side to prevent abuse.
-
-**Parameters:**
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `channel` | string | ✅ | Channel to use (`telegram`, `email`) |
-| `body` | string | ✅ | Message body content |
-| `title` | string | ❌ | Message title/subject |
-| `metadata` | object | ❌ | Extra options (e.g., `{"format": "html"}`) |
-
-**Example:**
 ```json
 {
-  "channel": "telegram",
-  "body": "Service v1.2.3 deployed successfully to production."
-}
-```
-
-**Example (HTML email):**
-```json
-{
-  "channel": "email",
-  "body": "<h1>Deploy Complete</h1><p>All services healthy.</p>",
-  "title": "Deploy Complete",
-  "metadata": {"format": "html"}
-}
-```
-
-### `get-channel-config`
-
-Get the supported channels, their parameter schema, and configuration. Use this to discover available channels before sending.
-
-**Parameters:**
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `channel` | string | ❌ | Filter by channel name. If omitted, returns all channels |
-
-**Returns:**
-```json
-{
-  "channels": [
-    {
-      "channel": "telegram",
-      "enabled": true,
-      "default_recipient": "123456789",
-      "supported_params": {
-        "body": {"required": true, "description": "Message content, supports Markdown format"},
-        "title": {"required": false, "description": "Bold title prepended to message body"},
-        "metadata": {"required": false, "description": "Optional key-value pairs"}
-      }
-    },
-    {
-      "channel": "email",
-      "enabled": true,
-      "default_recipient": "team@example.com",
-      "supported_params": {
-        "body": {"required": true, "description": "Email body content. Supports plain text or HTML"},
-        "title": {"required": false, "description": "Email subject line"},
-        "metadata": {"required": false, "description": "Optional, e.g. {\"format\": \"html\"}"}
-      }
+  "mcpServers": {
+    "notification": {
+      "url": "http://localhost:3000/mcp"
     }
-  ],
-  "total": 2
+  }
 }
 ```
 
-## Architecture
+## Environment Variables
 
-```
-notification-mcp/
-├── cmd/server/          # Application entry point
-├── internal/
-│   ├── domain/          # Domain models, value objects, ports
-│   ├── application/     # Application services (use cases)
-│   ├── infrastructure/  # Technical implementations
-│   │   ├── config/      # Configuration management
-│   │   └── sender/      # Channel sender implementations
-│   └── interfaces/      # Interface adapters
-│       └── mcp/         # MCP protocol server
-├── .env.example         # Configuration template
-├── Dockerfile           # Multi-stage Docker build
-└── .github/workflows/   # CI/CD pipeline
-```
+At least one notification channel must be enabled.
 
-## Configuration Reference
+### Server
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MCP_PORT` | `3000` | MCP HTTP server port. Also serves `/health` |
+| `MCP_AUTH_TOKEN` | - | Optional MCP authentication token. Empty means authentication is disabled |
+
+### Telegram
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `TELEGRAM_ENABLED` | `false` | Enable Telegram channel |
 | `TELEGRAM_BOT_TOKEN` | - | Telegram Bot API token |
-| `TELEGRAM_CHAT_ID` | - | Default Telegram chat ID |
+| `TELEGRAM_CHAT_ID` | - | Server-controlled Telegram chat ID |
+
+### Email
+
+| Variable | Default | Description |
+|----------|---------|-------------|
 | `EMAIL_ENABLED` | `false` | Enable Email channel |
 | `EMAIL_SMTP_HOST` | - | SMTP server hostname |
 | `EMAIL_SMTP_PORT` | `587` | SMTP server port |
 | `EMAIL_SMTP_USERNAME` | - | SMTP authentication username |
 | `EMAIL_SMTP_PASSWORD` | - | SMTP authentication password |
 | `EMAIL_FROM` | - | Sender email address |
-| `EMAIL_FROM_NAME` | - | Sender display name (e.g., "My Service") |
-| `EMAIL_TO` | - | Recipient email address (defaults to EMAIL_FROM if not set) |
+| `EMAIL_FROM_NAME` | - | Sender display name |
+| `EMAIL_TO` | `EMAIL_FROM` | Recipient email address |
 | `EMAIL_USE_TLS` | `true` | Use TLS for SMTP |
-| `MCP_AUTH_TOKEN` | - | Optional MCP authentication token |
-| `MCP_PORT` | `3000` | MCP HTTP server port (also serves health check) |
 
-## Testing
+### Bark
+
+The service sends Bark notifications to the official JSON endpoint:
+
+```text
+POST https://api.day.app/push
+```
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `BARK_ENABLED` | `false` | Enable Bark channel |
+| `BARK_DEVICE_KEY` | - | Bark device key. Use comma-separated keys for batch push, e.g. `key1,key2,key3` |
+
+## Tools
+
+### `send-notification`
+
+Send a notification through `telegram`, `email`, or `bark`.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `channel` | string | yes | Channel name: `telegram`, `email`, or `bark` |
+| `body` | string | yes | Message body |
+| `title` | string | no | Message title or email subject |
+| `metadata` | object | no | Channel-specific options |
+
+Email supports:
+
+| Metadata key | Description |
+|--------------|-------------|
+| `format` | Set to `html` to send HTML email |
+
+Bark supports:
+
+| Metadata key | Description |
+|--------------|-------------|
+| `subtitle` | Push subtitle |
+| `markdown` | Markdown body. Bark ignores `body` when this is set |
+| `level` | Interruption level: `critical`, `active`, `timeSensitive`, or `passive` |
+| `volume` | Critical alert volume, `0` to `10` |
+| `badge` | App badge number |
+| `call` | Set to `"1"` to repeat the notification ringtone |
+| `autoCopy` | Set to `"1"` to copy push content automatically where iOS allows it |
+| `copy` | Text copied from the notification |
+| `sound` | Bark notification sound |
+| `icon` | Custom icon URL |
+| `image` | Push image URL |
+| `group` | Notification group |
+| `ciphertext` | Encrypted push ciphertext |
+| `isArchive` | Set to `1` to save push history, other values disable saving |
+| `ttl` | Archive retention time in seconds |
+| `url` | URL opened when the notification is tapped |
+| `action` | Set to `"alert"` to show an action popup in Bark |
+| `id` | Same ID updates an existing notification |
+| `delete` | Set to `"1"` with `id` to delete the notification |
+
+`device_key` and `device_keys` are always derived from `BARK_DEVICE_KEY`.
+
+Example:
+
+```json
+{
+  "channel": "bark",
+  "title": "Deploy Complete",
+  "body": "All services are healthy.",
+  "metadata": {
+    "group": "deployments",
+    "sound": "minuet",
+    "badge": 1,
+    "url": "https://example.com/deploys/123"
+  }
+}
+```
+
+### `get-channel-config`
+
+Returns registered channels, enabled state, server-configured recipient, and supported parameters.
+
+```json
+{
+  "channel": "optional channel name"
+}
+```
+
+## Local Development
 
 ```bash
-go test -v ./...
+go build -o notification-mcp ./cmd/server
+./notification-mcp
+```
+
+Run checks before committing:
+
+```bash
+make check
 ```
 
 ## License

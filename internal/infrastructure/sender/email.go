@@ -89,7 +89,7 @@ func (e *EmailSender) Send(_ context.Context, notification *domain.Notification)
 	// Determine content type based on metadata
 	contentType := "text/plain"
 	if notification.Metadata != nil {
-		if format, ok := notification.Metadata["format"]; ok && format == "html" {
+		if format, ok := notification.Metadata["format"].(string); ok && format == "html" {
 			contentType = "text/html"
 		}
 	}

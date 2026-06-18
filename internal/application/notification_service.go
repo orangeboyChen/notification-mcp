@@ -13,7 +13,7 @@ type SendNotificationRequest struct {
 	Channel  string
 	Title    string
 	Body     string
-	Metadata map[string]string
+	Metadata map[string]interface{}
 }
 
 // SendNotificationResponse represents the output of a notification send operation.

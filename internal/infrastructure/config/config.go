@@ -11,6 +11,7 @@ import (
 type Config struct {
 	Telegram TelegramConfig
 	Email    EmailConfig
+	Bark     BarkConfig
 	Auth     AuthConfig
 	Server   ServerConfig
 }
@@ -33,6 +34,12 @@ type EmailConfig struct {
 	FromName string
 	To       string
 	UseTLS   bool
+}
+
+// BarkConfig holds Bark push configuration.
+type BarkConfig struct {
+	Enabled   bool
+	DeviceKey string
 }
 
 // AuthConfig holds authentication configuration.
@@ -64,6 +71,10 @@ func Load() (*Config, error) {
 			FromName: os.Getenv("EMAIL_FROM_NAME"),
 			To:       os.Getenv("EMAIL_TO"),
 			UseTLS:   getEnvBool("EMAIL_USE_TLS", true),
+		},
+		Bark: BarkConfig{
+			Enabled:   getEnvBool("BARK_ENABLED", false),
+			DeviceKey: os.Getenv("BARK_DEVICE_KEY"),
 		},
 		Auth: AuthConfig{
 			Enabled: os.Getenv("MCP_AUTH_TOKEN") != "",
@@ -108,7 +119,13 @@ func (c *Config) Validate() []error {
 		}
 	}
 
-	if !c.Telegram.Enabled && !c.Email.Enabled {
+	if c.Bark.Enabled {
+		if c.Bark.DeviceKey == "" {
+			errs = append(errs, fmt.Errorf("BARK_DEVICE_KEY is required when Bark is enabled"))
+		}
+	}
+
+	if !c.Telegram.Enabled && !c.Email.Enabled && !c.Bark.Enabled {
 		errs = append(errs, fmt.Errorf("at least one notification channel must be enabled"))
 	}
 
@@ -123,6 +140,9 @@ func (c *Config) EnabledChannels() []string {
 	}
 	if c.Email.Enabled {
 		channels = append(channels, "email")
+	}
+	if c.Bark.Enabled {
+		channels = append(channels, "bark")
 	}
 	return channels
 }
