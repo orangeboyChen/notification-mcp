@@ -58,7 +58,7 @@ func (e *EmailSender) GetChannelConfig() domain.ChannelConfig {
 			},
 			"metadata": {
 				Required:    false,
-				Description: "Optional key-value pairs, e.g. {\"format\": \"html\"} for HTML emails",
+				Description: "Optional key-value pairs, e.g. {\"format\": \"html\", \"from_name\": \"Alert Bot\"}",
 			},
 		},
 	}
@@ -70,10 +70,31 @@ func (e *EmailSender) Send(_ context.Context, notification *domain.Notification)
 		return domain.NewDomainError(domain.ErrCodeChannelDisabled, "email channel is not enabled")
 	}
 
+	m := e.buildMessage(notification)
+
+	// Create dialer
+	d := gomail.NewDialer(e.config.Host, e.config.Port, e.config.Username, e.config.Password)
+	if e.config.UseTLS {
+		d.TLSConfig = &tls.Config{
+			ServerName: e.config.Host,
+		}
+	}
+
+	// Send the email
+	if err := d.DialAndSend(m); err != nil {
+		return domain.NewDomainErrorWithCause(domain.ErrCodeSendFailed,
+			fmt.Sprintf("failed to send email to %s", notification.Recipient), err)
+	}
+
+	return nil
+}
+
+func (e *EmailSender) buildMessage(notification *domain.Notification) *gomail.Message {
 	// Build the email message
 	m := gomail.NewMessage()
-	if e.config.FromName != "" {
-		m.SetAddressHeader("From", e.config.From, e.config.FromName)
+	fromName := e.fromName(notification)
+	if fromName != "" {
+		m.SetAddressHeader("From", e.config.From, fromName)
 	} else {
 		m.SetHeader("From", e.config.From)
 	}
@@ -95,19 +116,14 @@ func (e *EmailSender) Send(_ context.Context, notification *domain.Notification)
 	}
 	m.SetBody(contentType, notification.Body)
 
-	// Create dialer
-	d := gomail.NewDialer(e.config.Host, e.config.Port, e.config.Username, e.config.Password)
-	if e.config.UseTLS {
-		d.TLSConfig = &tls.Config{
-			ServerName: e.config.Host,
+	return m
+}
+
+func (e *EmailSender) fromName(notification *domain.Notification) string {
+	if notification.Metadata != nil {
+		if fromName, ok := notification.Metadata["from_name"].(string); ok && fromName != "" {
+			return fromName
 		}
 	}
-
-	// Send the email
-	if err := d.DialAndSend(m); err != nil {
-		return domain.NewDomainErrorWithCause(domain.ErrCodeSendFailed,
-			fmt.Sprintf("failed to send email to %s", notification.Recipient), err)
-	}
-
-	return nil
+	return e.config.FromName
 }

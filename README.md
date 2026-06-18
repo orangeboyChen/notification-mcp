@@ -63,7 +63,7 @@ At least one notification channel must be enabled.
 | `EMAIL_SMTP_USERNAME` | - | SMTP authentication username |
 | `EMAIL_SMTP_PASSWORD` | - | SMTP authentication password |
 | `EMAIL_FROM` | - | Sender email address |
-| `EMAIL_FROM_NAME` | - | Sender display name |
+| `EMAIL_FROM_NAME` | - | Default sender display name. Can be overridden per message with `metadata.from_name` |
 | `EMAIL_TO` | `EMAIL_FROM` | Recipient email address |
 | `EMAIL_USE_TLS` | `true` | Use TLS for SMTP |
 
@@ -98,6 +98,7 @@ Email supports:
 | Metadata key | Description |
 |--------------|-------------|
 | `format` | Set to `html` to send HTML email |
+| `from_name` | Sender display name for this message. Overrides `EMAIL_FROM_NAME` |
 
 Bark supports:
 
