@@ -6,8 +6,8 @@ Recipients are configured on the server to prevent clients from sending to arbit
 ## Quick Start
 
 ```bash
-docker pull ghcr.io/orangeboychen/notification-mcp:{版本号}
-docker run -d --env-file .env -p 3000:3000 ghcr.io/orangeboychen/notification-mcp:{版本号}
+docker pull ghcr.io/orangeboychen/notification-mcp:{version}
+docker run -d --env-file .env -p 3000:3000 ghcr.io/orangeboychen/notification-mcp:{version}
 ```
 
 MCP endpoint:
